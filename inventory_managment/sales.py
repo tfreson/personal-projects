@@ -32,8 +32,6 @@ def add_sales(conn, pizza_size, toppings, date):
 def total_sales_by_item(conn, date):
     items = helpers.get_inventory_item_names(conn) 
     sales = helpers.get_sales_by_item(conn, date)
-    print(items)
-    print(sales)
     counts = {}
 
     for item in items:

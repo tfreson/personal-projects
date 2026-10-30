@@ -15,16 +15,17 @@ def load_test_data(conn):
     count_inventory(conn, [("Pepperoni", 10, 0.00), ("Mushrooms", 5, 0.00), ("Onions", 8, 0.00),
                            ("Sausage", 12, 0.00), ("Bacon", 6, 0.00), ("cheese", 15, 0.00),
                            ("green peppers", 7, 0.00), ("black olives", 4, 0.00),
-                           ("tomatoes", 9, 0.00)], "2026-10-21")
+                           ("tomatoes", 9, 0.00),("pineapple", 5, 0.00), ("spinach", 3, 0.00), ("feta cheese", 4, 0.00)], "2026-10-21")
+    
     count_inventory(conn, [("Pepperoni", 15, 0.00), ("Mushrooms", 10, 0.00), ("Onions", 8, 0.00),
                            ("Sausage", 12, 0.00), ("Bacon", 6, 0.00), ("cheese", 30, 0.00),
                            ("green peppers", 7, 0.00), ("black olives", 4, 0.00),
-                           ("tomatoes", 9, 0.00)], "2026-10-20")
+                           ("tomatoes", 9, 0.00),("pineapple", 5, 0.00), ("spinach", 3, 0.00), ("feta cheese", 4, 0.00)], "2026-10-20")
 
     for args in [
         ("Pepperoni", 2, 3.00), ("Mushrooms", 3, 2.00), ("Onions", 1, 1.00),
         ("Sausage", 4, 3.00), ("Bacon", 4, 3.00), ("cheese", 6, 0.00),
-        ("green peppers", 1, 1.00), ("black olives", 1, 2.00), ("tomatoes", 3, 2.00),
+        ("green peppers", 1, 1.00), ("black olives", 1, 2.00), ("tomatoes", 3, 2.00),( "pineapple", 2, 1.00),( "spinach", 1, 1.00),( "feta cheese", 2, 2.00),
     ]:
         add_recipe(conn, *args)
 
@@ -34,5 +35,4 @@ def load_test_data(conn):
     add_sales(conn, "Large", ["Pepperoni", "Mushrooms", "Bacon"], d)
     add_sales(conn, "Medium", ["Onions", "Sausage", "Bacon"], d)
     add_sales(conn, "Small", ["cheese", "green peppers", "black olives", "tomatoes"], d)
-    add_sales(conn, "Extra Large", all_toppings, d)
-    add_sales(conn, "Large", all_toppings, d)
+    

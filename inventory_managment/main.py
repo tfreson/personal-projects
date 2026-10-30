@@ -9,7 +9,7 @@ def main():
         reset_tables(conn)      # wipes data; remove once you stop testing
         load_test_data(conn)
         #reports.get_ci(conn, "2026-10-21")
-        reports.inventory_stats(conn, "2026-10-20")
+        reports.inventory_stats(conn, "2026-10-21")
     finally:
         conn.close()
 

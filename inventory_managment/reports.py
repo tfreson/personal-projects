@@ -3,28 +3,33 @@ import sales
 import helpers
 
 def inventory_stats(conn, count_date):
+    #agrigation fuction 
 
-    usage =sales.total_sales_by_item(conn, count_date)
-    print("usage", usage)
-    theo_usage = {}
-    unit_variance = {}
-    unit_cost = {}
-    dollar_value = {}
-    variance_percent = {}
-
-    #usage 
-    
-
-    #theo usage 
-
-
-    #unit varience 
-
-    #unit cost
-
-    #dolar value 
-
-    #varience %
+    usage = get_diff_in_counts(conn, get_counts(conn, (datetime.strptime(count_date, "%Y-%m-%d") - timedelta(days=1)).strftime("%Y-%m-%d")), get_counts(conn, count_date), count_date)
+    theo_usage = sales.total_sales_by_item(conn, count_date)
+    unit_variance = unit_variance_func(conn, usage, theo_usage)
+    unit_cost = unit_cost_func(conn, unit_variance)
+    dollar_value = dollar_value_func(conn, unit_variance)
+    variance_percent = variance_percent_func(conn, dollar_value, unit_cost)
+    #stats as dict with item name as a key then usage, theo_usage, unit_variance, unit_cost, dollar_value, variance_percent as values
+    print("usage: ", usage)
+    print()
+    stats = {
+        
+        item: {
+            "usage": usage[item],
+            "theo_usage": theo_usage.get(item, 0),
+            "unit_variance": unit_variance[item],
+            "unit_cost": unit_cost[item],
+            "dollar_value": dollar_value[item],
+            "variance_percent": variance_percent[item],
+        }
+        for item in usage
+    }
+   
+    for item, data in stats.items():
+        print(f"{item}: {data}")
+    return stats
 
 
 
@@ -42,31 +47,47 @@ def get_counts(conn, count_date):
     cur.close()
     return rows
 
-def get_diff_in_ci(conn, previnv, curinv, date):
-    prev_qty = {row[0]: row[3] for row in previnv}
-    print("Change in count (current - previous):")
-    for name, _, _, qty in curinv:
-        if name in prev_qty:
-            print(f"  {name}: {qty - prev_qty[name]:+d}")
+def get_diff_in_counts(conn, previnv, curinv, date):
+    #find the difference in the counts between the two dates, return a dict with the item name as the key and the difference as the value
+    #for all items in the inventory, if an item is not in the previous inventory, assume the previous count was 0
+    
+    prev_dict = {item[0]: item for item in previnv}
+    cur_dict = {item[0]: item for item in curinv}
 
-    print("Sales for", date)
-    for item, qty in get_sales_by_item(conn, date).items():
-        price = get_recipe_price(conn, item)
-        weight_oz = get_recipe_weight(conn, item)
-        print(f"  {item}: sold {qty}, price {price}, "
-              f"{weight_oz} oz ({oz_to_lbs(weight_oz):.2f} lbs)")
+    diff = {}
 
-def get_ci(conn, count_date):
-    prev_date = (datetime.strptime(count_date, "%Y-%m-%d") - timedelta(days=1)).strftime("%Y-%m-%d")
-    curinv = get_counts(conn, count_date)
-    previnv = get_counts(conn, prev_date)
+    for item in cur_dict:
+        prev_qty = prev_dict.get(item, (None, None, None, 0))[3]
+        cur_qty = cur_dict[item][3]
+        diff[item] = prev_qty - cur_qty
 
-    print("Current inventory:", count_date)
-    for item in curinv:
-        print(item)
-    print("Previous inventory:", prev_date)
-    for item in previnv:
-        print(item)
+    print(f"Inventory difference for {date}: {diff}")
 
-    print("ci stats")
-    get_diff_in_ci(conn, previnv, curinv, prev_date)
+    return diff
+
+def unit_variance_func(conn, usage, theo_usage):
+    unit_variance = {}
+    for item in usage:
+        unit_variance[item] = usage[item] - theo_usage.get(item, 0)
+    return unit_variance
+
+def unit_cost_func(conn, unit_variance):
+    unit_cost = {}
+    for item in unit_variance:
+        unit_cost[item] = helpers.get_inventory_item_price(conn, item)
+    return unit_cost
+
+def dollar_value_func(conn, unit_variance):
+    dollar_value = {}
+    for item in unit_variance:
+        dollar_value[item] = unit_variance[item] * helpers.get_inventory_item_price(conn, item)
+    return dollar_value
+
+def variance_percent_func(conn, dollar_value, unit_cost):
+    variance_percent = {}
+    for item in dollar_value:
+        if dollar_value[item] != 0:
+            variance_percent[item] = (unit_cost[item] / dollar_value[item]) * 100
+        else:
+            variance_percent[item] = 0
+    return variance_percent
